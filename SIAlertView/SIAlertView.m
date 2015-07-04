@@ -767,7 +767,7 @@ static SIAlertView *__si_alert_current_view;
         if (y > CONTENT_PADDING_TOP) {
             y += GAP;
         }
-        CGFloat height = self.customView.frame.size.height;
+        CGFloat height = [self heightForCustomView];
         
         self.customView.frame = CGRectMake(CONTENT_PADDING_LEFT, y, CONTAINER_WIDTH - CONTENT_PADDING_LEFT * 2, height);
         y += height + GAP;
@@ -920,9 +920,9 @@ static SIAlertView *__si_alert_current_view;
 - (CGFloat)heightForMessageLabel
 {
     CGFloat minHeight = 0;
-    if (!self.customView) {
+//    if (!self.customView) {
         minHeight = MESSAGE_MIN_LINE_COUNT * self.messageLabel.font.lineHeight;
-    }
+//    }
     if (self.messageLabel) {
         CGFloat maxHeight = MESSAGE_MAX_LINE_COUNT * self.messageLabel.font.lineHeight;
         
@@ -1044,6 +1044,7 @@ static SIAlertView *__si_alert_current_view;
             self.messageLabel.font = self.messageFont;
             self.messageLabel.textColor = self.messageColor;
             self.messageLabel.numberOfLines = MESSAGE_MAX_LINE_COUNT;
+            [self.messageLabel setLineBreakMode:NSLineBreakByWordWrapping];
             [self.containerView addSubview:self.messageLabel];
 #if DEBUG_LAYOUT
             self.messageLabel.backgroundColor = [UIColor redColor];
