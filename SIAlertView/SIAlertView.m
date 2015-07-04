@@ -24,7 +24,7 @@ NSString *const SIAlertViewDidDismissNotification = @"SIAlertViewDidDismissNotif
 #define CONTENT_PADDING_LEFT 10
 #define CONTENT_PADDING_TOP 12
 #define CONTENT_PADDING_BOTTOM 10
-#define BUTTON_HEIGHT 44
+#define BUTTON_HEIGHT 36
 #define CONTAINER_WIDTH 300
 
 const UIWindowLevel UIWindowLevelSIAlert = 1996.0;  // don't overlap system's alert
@@ -47,6 +47,7 @@ static SIAlertView *__si_alert_current_view;
 #endif
 @property (nonatomic, assign, getter = isVisible) BOOL visible;
 
+@property (nonatomic, strong) UIView *customView;
 @property (nonatomic, strong) UILabel *titleLabel;
 @property (nonatomic, strong) UILabel *messageLabel;
 @property (nonatomic, strong) UIView *containerView;
@@ -265,6 +266,18 @@ static SIAlertView *__si_alert_current_view;
 	}
 	return self;
 }
+
+
+- (id)initWithTitle:(NSString *)title andCustomView:(UIView *)customView{
+    self = [super init];
+    if (self) {
+        _title = title;
+        _customView = customView;
+        self.items = [[NSMutableArray alloc] init];
+    }
+    return self;
+}
+
 
 #pragma mark - Class methods
 
@@ -737,6 +750,8 @@ static SIAlertView *__si_alert_current_view;
         self.titleLabel.frame = CGRectMake(CONTENT_PADDING_LEFT, y, self.containerView.bounds.size.width - CONTENT_PADDING_LEFT * 2, height);
         y += height;
 	}
+    
+    
     if (self.messageLabel) {
         if (y > CONTENT_PADDING_TOP) {
             y += GAP;
@@ -746,17 +761,62 @@ static SIAlertView *__si_alert_current_view;
         self.messageLabel.frame = CGRectMake(CONTENT_PADDING_LEFT, y, self.containerView.bounds.size.width - CONTENT_PADDING_LEFT * 2, height);
         y += height;
     }
+    
+    
+    if (self.customView) {
+        if (y > CONTENT_PADDING_TOP) {
+            y += GAP;
+        }
+        CGFloat height = self.customView.frame.size.height;
+        
+        self.customView.frame = CGRectMake(CONTENT_PADDING_LEFT, y, CONTAINER_WIDTH - CONTENT_PADDING_LEFT * 2, height);
+        y += height + GAP;
+    }
+    
+    
     if (self.items.count > 0) {
         if (y > CONTENT_PADDING_TOP) {
             y += GAP;
         }
         if (self.items.count == 2 && self.buttonsListStyle == SIAlertViewButtonsListStyleNormal) {
+
             CGFloat width = (self.containerView.bounds.size.width - CONTENT_PADDING_LEFT * 2 - GAP) * 0.5;
             UIButton *button = self.buttons[0];
             button.frame = CGRectMake(CONTENT_PADDING_LEFT, y, width, BUTTON_HEIGHT);
             button = self.buttons[1];
             button.frame = CGRectMake(CONTENT_PADDING_LEFT + width + GAP, y, width, BUTTON_HEIGHT);
+            
+            for (NSUInteger i = 0; i < self.buttons.count; i++) {
+                
+                if(((SIAlertItem *)self.items[i]).type == SIAlertViewButtonTypeDestructive){
+                    
+                    [self.buttons[i] setBackgroundColor:[UIColor colorWithRed:0.882352941f green:0.337254902f blue:0.282352941f alpha:1.0]];
+                    [((UIButton*)(self.buttons[i])).layer setBorderColor:[[UIColor colorWithRed:0.960784314f green:0.368627451f blue:0.305882353f alpha:1.0] CGColor]];
+                    [((UIButton*)(self.buttons[i])).layer setBorderWidth:1.0f];
+                    
+                }else if(((SIAlertItem *)self.items[i]).type == SIAlertViewButtonTypeDefault){
+                    
+                    [self.buttons[i] setBackgroundColor:[UIColor colorWithRed:0.97647f green:0.97647f blue:0.97647f alpha:1.0]];
+                    [((UIButton*)(self.buttons[i])).layer setBorderColor:[[UIColor colorWithRed:0.921568f green:0.921568f blue:0.921568f alpha:1.0] CGColor]];
+                    [((UIButton*)(self.buttons[i])).layer setBorderWidth:1.0f];
+                    
+                }else if(((SIAlertItem *)self.items[i]).type == SIAlertViewButtonTypeCancel){
+                    
+                    [self.buttons[i] setBackgroundColor:[UIColor colorWithRed:0.88235f green:0.88235f blue:0.88235f alpha:1.0]];
+                    [((UIButton*)(self.buttons[i])).layer setBorderColor:[[UIColor colorWithRed:0.84313f green:0.84313f blue:0.84313f alpha:1.0] CGColor]];
+                    [((UIButton*)(self.buttons[i])).layer setBorderWidth:1.0f];
+                    
+                }
+                
+                [self.buttons[i] setClipsToBounds:YES];
+                [((UIButton*)(self.buttons[i])).layer setCornerRadius:button.frame.size.height/2];
+                
+            }
+
+
+            
         } else {
+            
             for (NSUInteger i = 0; i < self.buttons.count; i++) {
                 UIButton *button = self.buttons[i];
                 button.frame = CGRectMake(CONTENT_PADDING_LEFT, y, self.containerView.bounds.size.width - CONTENT_PADDING_LEFT * 2, BUTTON_HEIGHT);
@@ -768,6 +828,19 @@ static SIAlertView *__si_alert_current_view;
                     }
                     y += BUTTON_HEIGHT + GAP;
                 }
+                
+                if(((SIAlertItem *)self.items[i]).type == SIAlertViewButtonTypeDestructive){
+                    [button setBackgroundColor:[UIColor redColor]];
+                }else if(((SIAlertItem *)self.items[i]).type == SIAlertViewButtonTypeDefault){
+                    [button setBackgroundColor:[UIColor lightGrayColor]];
+                }else if(((SIAlertItem *)self.items[i]).type == SIAlertViewButtonTypeCancel){
+                    [button setBackgroundColor:[UIColor lightGrayColor]];
+                }
+                
+                [button setClipsToBounds:YES];
+                [button.layer setCornerRadius:button.frame.size.height/2];
+
+
             }
         }
     }
@@ -785,6 +858,13 @@ static SIAlertView *__si_alert_current_view;
         }
         height += [self heightForMessageLabel];
     }
+    if (self.customView) {
+        if (height > CONTENT_PADDING_TOP) {
+            height += GAP*2;
+        }
+        height += [self heightForCustomView];
+    }
+    
     if (self.items.count > 0) {
         if (height > CONTENT_PADDING_TOP) {
             height += GAP;
@@ -839,7 +919,10 @@ static SIAlertView *__si_alert_current_view;
 
 - (CGFloat)heightForMessageLabel
 {
-    CGFloat minHeight = MESSAGE_MIN_LINE_COUNT * self.messageLabel.font.lineHeight;
+    CGFloat minHeight = 0;
+    if (!self.customView) {
+        minHeight = MESSAGE_MIN_LINE_COUNT * self.messageLabel.font.lineHeight;
+    }
     if (self.messageLabel) {
         CGFloat maxHeight = MESSAGE_MAX_LINE_COUNT * self.messageLabel.font.lineHeight;
         
@@ -870,12 +953,22 @@ static SIAlertView *__si_alert_current_view;
     return minHeight;
 }
 
+
+
+- (CGFloat)heightForCustomView {
+
+    return self.customView.frame.size.height;
+    
+}
+
 #pragma mark - Setup
 
 - (void)setup
 {
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardDidShow:) name:UIKeyboardDidShowNotification object:nil];
     [self setupContainerView];
     [self updateTitleLabel];
+    [self setupCustomView];
     [self updateMessageLabel];
     [self setupButtons];
     [self invalidateLayout];
@@ -883,6 +976,7 @@ static SIAlertView *__si_alert_current_view;
 
 - (void)teardown
 {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
     [self.containerView removeFromSuperview];
     self.containerView = nil;
     self.titleLabel = nil;
@@ -891,6 +985,14 @@ static SIAlertView *__si_alert_current_view;
     [self.alertWindow removeFromSuperview];
     self.alertWindow = nil;
     self.layoutDirty = NO;
+}
+
+
+-(void)setupCustomView{
+    if (self.customView) {
+        [self.containerView addSubview:self.customView];
+    }
+    [self invalidateLayout];
 }
 
 - (void)setupContainerView
@@ -977,25 +1079,20 @@ static SIAlertView *__si_alert_current_view;
 	UIImage *highlightedImage = nil;
 	switch (item.type) {
 		case SIAlertViewButtonTypeCancel:
-			normalImage = [UIImage imageNamed:@"SIAlertView.bundle/button-cancel"];
-			highlightedImage = [UIImage imageNamed:@"SIAlertView.bundle/button-cancel-d"];
 			[button setTitleColor:self.cancelButtonColor forState:UIControlStateNormal];
             [button setTitleColor:[self.cancelButtonColor colorWithAlphaComponent:0.8] forState:UIControlStateHighlighted];
 			break;
 		case SIAlertViewButtonTypeDestructive:
-			normalImage = [UIImage imageNamed:@"SIAlertView.bundle/button-destructive"];
-			highlightedImage = [UIImage imageNamed:@"SIAlertView.bundle/button-destructive-d"];
             [button setTitleColor:self.destructiveButtonColor forState:UIControlStateNormal];
             [button setTitleColor:[self.destructiveButtonColor colorWithAlphaComponent:0.8] forState:UIControlStateHighlighted];
 			break;
 		case SIAlertViewButtonTypeDefault:
 		default:
-			normalImage = [UIImage imageNamed:@"SIAlertView.bundle/button-default"];
-			highlightedImage = [UIImage imageNamed:@"SIAlertView.bundle/button-default-d"];
 			[button setTitleColor:self.buttonColor forState:UIControlStateNormal];
             [button setTitleColor:[self.buttonColor colorWithAlphaComponent:0.8] forState:UIControlStateHighlighted];
 			break;
 	}
+    
 	CGFloat hInset = floorf(normalImage.size.width / 2);
 	CGFloat vInset = floorf(normalImage.size.height / 2);
 	UIEdgeInsets insets = UIEdgeInsetsMake(vInset, hInset, vInset, hInset);
@@ -1208,5 +1305,21 @@ static SIAlertView *__si_alert_current_view;
     }
 }
 #endif
+
+
+
+#pragma mark - Notification handle methods
+
+- (void)keyboardDidShow:(NSNotification *)notif{
+    NSDictionary* info = [notif userInfo];
+    NSValue* aValue = [info objectForKey:UIKeyboardFrameEndUserInfoKey];
+    CGSize keyboardSize = [aValue CGRectValue].size;
+    CGRect frame = self.containerView.frame;
+    CGFloat y = (self.frame.size.height-keyboardSize.height- self.containerView.frame.size.height)/2;
+    frame.origin.y = MAX(y,0);
+    [UIView animateWithDuration:0.25 animations:^{
+        self.containerView.frame = frame;
+    }];
+}
 
 @end
