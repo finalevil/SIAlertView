@@ -1114,7 +1114,6 @@ static SIAlertView *__si_alert_current_view;
 	if (item.action) {
 		item.action(self);
 	}
-	[self dismissAnimated:YES];
 }
 
 #pragma mark - CAAnimation delegate
